@@ -1,0 +1,50 @@
+<script src="//ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script>
+<h1>Nearly-tank controls</h1>
+<form>
+
+<input type="button" value="Forward" onclick="go('forward')">
+<br>
+<input type="button" value="Left" onclick="go('left')">
+<input type="button" value="Right" onclick="go('right')">
+<br>
+<input type="button" value="Stop" onclick="go('stop')">
+</form>
+<div id="e"></div>
+<div id="log">Log Entries go here<br></div>
+<script type="text/javascript">
+  function go(command) {
+  var qry;
+    switch(command) {
+      case 'forward': 
+        qry = 'f11=1&f12=1'; 
+        break; 
+      case 'stop': 
+        qry = 'f11=0&f12=0'; 
+        break; 
+      case 'left': 
+        qry = 'f11=1&f12=0'; 
+        break; 
+      case 'right': 
+        qry = 'f11=0&f12=1'; 
+        break; 
+      defult:
+        // nuhuh
+        return 0;
+        break; 
+    } // end switch
+    $('log').innerHTML += 'starting to ' + command; // + ' by ' + qry;
+    new Ajax.Request('/cgi-bin/gpioSet.py?'+qry , {
+      onSuccess: success,
+      onFailed: failed,
+      method: 'GET'}
+    );
+  }
+
+  function success(result) {
+    $('log').innerHTML += ' = success! teh woots\n<br>';
+  } 
+  function failed(result) {
+    $('log').innerHTML += ' = failed :(\n<br>';
+  } 
+
+</script>
