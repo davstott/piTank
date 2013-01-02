@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# todo: change this into a SYSV script
+
+# ensure we've got a FIFO where we're expecting it to be
+if [ ! -p /tmp/gpioControlPipe ] ; then
+  rm -f /tmp/gpioControlPipe
+  mknod /tmp/gpioControlPipe p
+fi
+
+# start listening for instructions
+# use tail -f as a dodgy hack for the moment to avoid having to handle EOF in python. makes it hard to exit this script once controls.py exits though.
+/usr/bin/tail -f /tmp/gpioControlPipe | /usr/bin/python27root /var/www/cgi-bin/controls.py
