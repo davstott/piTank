@@ -1,17 +1,29 @@
-<script src="//ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script> 
+<!-- <script src="prototype.js"></script> -->
+
+<img id="camImg" src="camera.jpg" style="float:right; width:352; height:288;" >
 <h1>Nearly-tank controls</h1>
 <form>
-
-<input type="button" value="Forward" onclick="go('forward')">
+<input type="button" value="Forward" onclick="go('forward')" style="font-size:200%;">
 <br>
-<input type="button" value="Left" onclick="go('left')">
-<input type="button" value="Right" onclick="go('right')">
+<input type="button" value="Left" onclick="go('left')" style="font-size:200%">
+<input type="button" value="Right" onclick="go('right')" style="font-size:200%">
 <br>
-<input type="button" value="Stop" onclick="go('stop')">
+<input type="button" value="Stop" onclick="go('stop')" style="font-size:200%">
 </form>
 <div id="e"></div>
 <div id="log">Log Entries go here<br></div>
 <script type="text/javascript">
+  var cacheBreak = 0;
+  // the random parameter is here to make the browser
+  // actually fetch a new image. it's a # instead of a ? so that it's only
+  // the local browser cache that's bypassed
+  function updateImg() {
+    cacheBreak++;
+    $('camImg').src = '/camera.jpg#nothing=' + cacheBreak;
+  }
+
+
   function go(command) {
   var qry;
     switch(command) {
@@ -46,5 +58,5 @@
   function failed(result) {
     $('log').innerHTML += ' = failed :(\n<br>';
   } 
-
+  window.setInterval(updateImg, 1000);
 </script>

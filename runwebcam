@@ -1,0 +1,1 @@
+fswebcam -p YUYV -F1 -r 352x288 /var/www/camera.jpg -l 2 
