@@ -1,5 +1,5 @@
-<script src="//ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script>
-<!-- <script src="prototype.js"></script> -->
+<!-- <script src="//ajax.googleapis.com/ajax/libs/prototype/1.7.1.0/prototype.js"></script> -->
+<script src="prototype.js"></script> 
 
 <img id="camImg" src="camera.jpg" style="float:right; width:352; height:288;" >
 <h1>Nearly-tank controls</h1>
@@ -27,7 +27,7 @@
   function go(command) {
    // check command in wads
    $('log').innerHTML += 'starting to ' + command; 
-    new Ajax.Request('/cgi-bin/cgiPipe.py?q='+command , {
+    new Ajax.Request('/cgi-bin/fcgiPipe.py?q='+command , {
       onSuccess: success,
       onFailed: failed,
       method: 'GET'}

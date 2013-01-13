@@ -6,6 +6,8 @@
 if [ ! -p /tmp/gpioControlPipe ] ; then
   rm -f /tmp/gpioControlPipe
   mknod /tmp/gpioControlPipe p
+  # needs to be writable by the fastcgi process
+  chmod 777 /tmp/gpioControlPipe
 fi
 
 # start listening for instructions
