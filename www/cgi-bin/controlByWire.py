@@ -1,27 +1,49 @@
 #!/usr/bin/python
+#I've used linux only code for manipulating stdin, but that's ok as it's designed to only run on linux
+#Some of this would be less necessary if this script directly opened the pipe in /tmp, instead of listening on stdin, but that makes it harder to work with interactively
+#todo: work out why this pegs the cpu 
+
 #todo:
 #security
-#non-scalar data types 
 
-import sys
+import sys, fcntl, os, select, termios, tty
 import RPi.GPIO as G
 from time import sleep
-#todo: look at pygame's tick instead of sleeping
+debug = False
 
 def init():
-  print("trying to set mode")
+  if debug:
+    print("trying to set mode")
   G.setmode(G.BOARD)
-  print("setting 11 and 12 to out")
+  if debug:
+    print("setting 11 and 12 to out")
   G.setup(11,G.OUT)
   G.setup(12,G.OUT)
+  if debug:
+    print("Setting stdin to be non blocking and into raw mode instead of line mode")
+  fnctlSettings = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
+  fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, os.O_NONBLOCK | fnctlSettings)
+  termiosSettings = termios.tcgetattr(sys.stdin.fileno())
+  tty.setraw(sys.stdin.fileno())
+  return [fnctlSettings, termiosSettings]
 
 def sense():
   # is there a byte to be read. if so, read it
   # todo: figure out if it's possible to not block here. another thread? Queue? 
   # also, no carriage returns
+  thisChar = ""
   if (debug):
     print "read?"
-  thisChar = sys.stdin.read(1)
+  try:
+    if select.select([sys.stdin,], [], [], 0)[0]:
+      thisChar = sys.stdin.read(1)
+    else:
+      if (debug):
+        print "nothing to read"
+  except IOError:
+    #nothing to read. should really have checked first
+    pass
+  
   if (debug):
     print "found: " + thisChar
   sensors = Sensors()
@@ -85,9 +107,8 @@ class State(object):
     else:
       self.currentCommand = startCommand
 
+originalSettings = init()
 
-debug = False
-init()
 
 #target number of updates per second. hopefully The Loop completes in less time than that.
 targetSpeed = 10
@@ -99,25 +120,27 @@ targetSpeed = 10
 # make any decisions
 # set any output
 
-while (True):
-# todo: consider using Queue to receive sensor input
-  if (debug): 
-    print "go sleep"
-  #todo: keep track of how long the loop takes so we're not assuming infinite cpu speed 
-  sleep(1 / targetSpeed)
-  if (debug) :
-    print "slept"
-  sensors = sense() 
-  if (debug):
-    print sensors
-  thisState = decide(sensors)
-  if (debug):
-    print thisState
-  setMotors(thisState)
-  if thisState.currentCommand == Commands.QUIT:
-    break;
-
-
-G.cleanup()
-
+try:
+  while (True):
+    # todo: consider using Queue to receive sensor input
+    if (debug): 
+      print "go sleep"
+    #todo: keep track of how long the loop takes so we're not assuming infinite cpu speed 
+    #todo: look at pygame's tick instead of sleeping
+    sleep(1 / targetSpeed)
+    if (debug) :
+      print "slept"
+    sensors = sense() 
+    if (debug):
+      print sensors
+    thisState = decide(sensors)
+    if (debug):
+      print thisState
+    setMotors(thisState)
+    if thisState.currentCommand == Commands.QUIT:
+      break;
+finally:
+  G.cleanup()
+  fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, originalSettings[0])
+  termios.tcsetattr(sys.stdin.fileno(), termios.TCSAFLUSH, originalSettings[1])
 
