@@ -7,6 +7,7 @@
 #security
 
 import sys, fcntl, os, select, termios, tty
+#todo: replace with quick2wire's python libraries
 import RPi.GPIO as G
 from time import sleep
 debug = False
@@ -16,9 +17,11 @@ def init():
     print("trying to set mode")
   G.setmode(G.BOARD)
   if debug:
-    print("setting 11 and 12 to out")
+    print("setting 11 and 12 to out and 13 to input with internal pullup active")
   G.setup(11,G.OUT)
   G.setup(12,G.OUT)
+
+  G.setup(13,G.IN, pull_up_down = G.PUD_UP)
   if debug:
     print("Setting stdin to be non blocking and into raw mode instead of line mode")
   fnctlSettings = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
@@ -29,9 +32,10 @@ def init():
 
 def sense():
   # is there a byte to be read. if so, read it
-  # todo: figure out if it's possible to not block here. another thread? Queue? 
-  # also, no carriage returns
+  # todo: figure out if it's possible to not block here with less CPU
+  sensors = Sensors()
   thisChar = ""
+
   if (debug):
     print "read?"
   try:
@@ -46,7 +50,6 @@ def sense():
   
   if (debug):
     print "found: " + thisChar
-  sensors = Sensors()
   # work out which command this byte represents
   if thisChar == "w":  # forward
     sensors.setUserCommand(Commands.FORWARD)
@@ -61,11 +64,17 @@ def sense():
   else: # no command received
     sensors.setUserCommand(Commands.NONE)
   #todo: add a class for other sensors and package up the return from this function
+
+  #using the internal pullup resistor, this assume the switch input connects straight to ground
+  sensors.frontBumper = not G.input(13)
+
   return sensors 
 
 def decide(sensors):
-  #todo: this
-  newState = State(sensors.userCommand)
+  if sensors.frontBumper:
+    newState = State(Commands.STOP)
+  else:
+    newState = State(sensors.userCommand)
   return newState
 
 def setMotors(state):
@@ -93,6 +102,7 @@ class Sensors(object):
   # todo: add a gpio input for a front bumper switch
   # todo: toString
   userCommand = Commands.NONE
+  frontBumper = False
   def setUserCommand(self, command):
     self.userCommand = command
 
