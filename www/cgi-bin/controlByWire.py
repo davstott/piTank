@@ -52,7 +52,11 @@ def sense():
     print "found: " + thisChar
   # work out which command this byte represents
   if thisChar == "w":  # forward
-    sensors.setUserCommand(Commands.FORWARD)
+    sensors.setUserCommand(Commands.FORWARD_full)
+  elif thisChar == "f":  # forward slow
+    sensors.setUserCommand(Commands.FORWARD_slow)
+  elif thisChar == "r":  # forward_medium
+    sensors.setUserCommand(Commands.FORWARD_medium)
   elif thisChar == "a":  # left
     sensors.setUserCommand(Commands.LEFT)
   elif thisChar == "d": # right
@@ -70,15 +74,27 @@ def sense():
 
   return sensors 
 
-def decide(sensors):
+def decide(sensors, cycle, lastCommand):
+  if sensors.userCommand == Commands.NONE:
+    sensors.userCommand = lastCommand
   if sensors.frontBumper:
     newState = State(Commands.STOP)
+  elif sensors.userCommand == Commands.FORWARD_slow:
+    if cycle in [3,8]:
+      newState = State(Commands.FORWARD_full)
+    else:
+      newState = State(Commands.STOP)
+  elif sensors.userCommand == Commands.FORWARD_medium:
+    if cycle in [3,6,9]:
+      newState = State(Commands.STOP)
+    else:
+      newState = State(Commands.FORWARD_full)
   else:
     newState = State(sensors.userCommand)
   return newState
 
 def setMotors(state):
-  if state.currentCommand == Commands.FORWARD:
+  if state.currentCommand == Commands.FORWARD_full:
     G.output(11, True)
     G.output(12, True)
   elif state.currentCommand == Commands.LEFT:
@@ -96,7 +112,7 @@ def setMotors(state):
 
 
 class Commands(object):
-  NONE, FORWARD, LEFT, RIGHT, STOP, QUIT = range(6)
+  NONE, FORWARD_full, LEFT, RIGHT, STOP, QUIT, FORWARD_slow, FORWARD_medium = range(8)
 
 class Sensors(object):
   # todo: add a gpio input for a front bumper switch
@@ -131,24 +147,32 @@ targetSpeed = 10
 # set any output
 
 try:
+  cycle = 0
+  #todo: model state and commands persistently
+  lastCommand = Commands.NONE
   while (True):
     # todo: consider using Queue to receive sensor input
-    if (debug): 
-      print "go sleep"
+    if (debug):
+      print str(cycle)
     #todo: keep track of how long the loop takes so we're not assuming infinite cpu speed 
     #todo: look at pygame's tick instead of sleeping
     sleep(1 / targetSpeed)
-    if (debug) :
+    if (debug):
       print "slept"
-    sensors = sense() 
+    sensors = sense()
     if (debug):
       print sensors
-    thisState = decide(sensors)
+    thisState = decide(sensors, cycle, lastCommand)
     if (debug):
       print thisState
     setMotors(thisState)
     if thisState.currentCommand == Commands.QUIT:
       break;
+    if (cycle == 9):
+      cycle = 0
+    else:
+      cycle = cycle + 1
+    lastCommand = sensors.userCommand
 finally:
   G.cleanup()
   fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, originalSettings[0])
