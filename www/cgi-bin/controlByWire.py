@@ -6,11 +6,12 @@
 #todo:
 #security
 
-import sys, fcntl, os, select, termios, tty
+import sys, fcntl, os, select, termios, tty, pygame
 #todo: replace with quick2wire's python libraries
 import RPi.GPIO as G
 from time import sleep
 debug = False
+usescreen = False
 
 def init():
   if debug:
@@ -20,15 +21,25 @@ def init():
     print("setting 11 and 12 to out and 13 to input with internal pullup active")
   G.setup(11,G.OUT)
   G.setup(12,G.OUT)
-
   G.setup(13,G.IN, pull_up_down = G.PUD_UP)
+  if usescreen:
+    if debug:
+      print("setting up the fb1 framebuffer")
+    os.environ["SDL_FBDEV"] = "/dev/fb1"
+    pygame.init()
+    pygame.mouse.set_visible(0)
+    pygame.font.init()
+    screen = pygame.display.set_mode((128, 160))
+  else:
+    screen = None
+
   if debug:
     print("Setting stdin to be non blocking and into raw mode instead of line mode")
   fnctlSettings = fcntl.fcntl(sys.stdin.fileno(), fcntl.F_GETFL)
   fcntl.fcntl(sys.stdin.fileno(), fcntl.F_SETFL, os.O_NONBLOCK | fnctlSettings)
   termiosSettings = termios.tcgetattr(sys.stdin.fileno())
   tty.setraw(sys.stdin.fileno())
-  return [fnctlSettings, termiosSettings]
+  return [fnctlSettings, termiosSettings, screen]
 
 def sense():
   # is there a byte to be read. if so, read it
@@ -78,6 +89,7 @@ def decide(sensors, cycle, lastCommand):
   if sensors.userCommand == Commands.NONE:
     sensors.userCommand = lastCommand
   if sensors.frontBumper:
+    sensors.userCommand = Commands.NONE
     newState = State(Commands.STOP)
   elif sensors.userCommand == Commands.FORWARD_slow:
     if cycle in [3,8]:
@@ -110,6 +122,14 @@ def setMotors(state):
     G.output(11, False)
     G.output(12, False)
 
+def updateScreen(screen, state):
+  blank = pygame.Surface([128, 160])
+  blank.fill([0, 0, 0])
+  screen.blit(blank, (0, 0))
+  font = pygame.font.Font(None, 30)
+  text = font.render('Command: %s' % state.currentCommand, True, (255, 255, 255))
+  screen.blit(text, (10, 10))
+  pygame.display.update()
 
 class Commands(object):
   NONE, FORWARD_full, LEFT, RIGHT, STOP, QUIT, FORWARD_slow, FORWARD_medium = range(8)
@@ -132,6 +152,8 @@ class State(object):
       self.currentCommand = Commands.STOP
     else:
       self.currentCommand = startCommand
+
+
 
 originalSettings = init()
 
@@ -166,6 +188,8 @@ try:
     if (debug):
       print thisState
     setMotors(thisState)
+    if usescreen: 
+      updateScreen(originalSettings[2], thisState)
     if thisState.currentCommand == Commands.QUIT:
       break;
     if (cycle == 9):
