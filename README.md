@@ -10,11 +10,17 @@ This code uses some HTML and Javascript to provide a simple web interface for fo
 There's a small FastCGI python script (fcgiPipe.py) that takes a command from the HTML and passes it to another python script (controls.py) that runs all the time in the background (rungpio). The commands are passed through a named pipe in the filesystem. 
 controls.py is designed to run just as well from an interactive command prompt as it is from the website, and it is quite responsive. 
 
+For variable speeds, there is controlByWire.py which runs some extremely crude PWM for different ahead speeds. It also has an input for a front bumper switch for emergency stops.
+
+LCD support is in! It assumes that /dev/fb1 is connected up to an ST7735R LCD (details here: http://marks-space.com/2012/11/23/raspberrypi-tft/)
+However, be careful because updating the LCD using pygame is relatively slow and ruins my crude PWM
+
 Input from the webcam is taken care of by another background process (runwebcam) that simply runs 'fswebcam' and causes it to write a jpeg to the web server's document root on an interval, currently two seconds. This is currently CPU intensive with my Logitech C110 webcam in YUYV mode, I expect that to have a maximum update rate of about 2 frames per second, at the cost of potentially lagging the motor controls.
 
 To run this, you need:
 - a Raspberry Pi
 - something connected to GPIO pins 17 and 18 to indicate their level, I've used an LED and a 680R resistor on each, connected through AdaFruit's excellent [Prototyping Pi Plate](http://www.adafruit.com/products/801). I've also used a simple transistor circuit and the Pi's 5v supply to control TTL inputs on a motor control board. More details on that later.
+- a switch connected to GPIO pin 21 that connects to ground, to act as a front bumper emergency stop
 - a web server on the Pi (I've used Lighttpd because it came to hand and I know how to make it work)
 - a network connection to the Pi (I've used a USB wireless ethernet adaptor and configured the Pi to automatically join my local network)
 - set up the background python script so that it can write to /dev/mem
