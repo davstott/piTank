@@ -17,3 +17,5 @@ measured,senseMin,senseMax,senseMean,senseMinRangeMean
 170,170,171,170,11
 180,180,183,181,11
 190,188,190,188,11
+measured,senseMin,senseMax,senseMean,senseMinRangeMean
+measured,senseMin,senseMax,senseMean,senseMinRangeMean
