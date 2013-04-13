@@ -10,6 +10,10 @@ class adc:
     # the maximum voltage we're expecting, as a float
     self.vMax = 3.3
 
+  def dist2d120x(v):
+    #todo: this in terms of 8bit ADC reading and fewer operators
+    return (1.0 / (v / 15.69)) - 0.42
+
   def getValues(self, numberOfValues = 1, channel = 0):
     # returns values in volts
     if (channel >= 4):
@@ -34,8 +38,9 @@ class adc:
       #it's an 8bit ADC so we need to convert from 0-255 to 0-vMax
       #not quite sure why read_byte(addr) works and read_byte_data(addr, 0) doesn't
       value = self.vMax * self.i2c.read_byte(self.addr) / 255
+      distance = dist2d120x(value)      
       elapsed = datetime.datetime.now() - startTime
-      values.append({"elapsed": elapsed, "value": value})
+      values.append({"elapsed": elapsed, "distance": distance})
       time.sleep(0.04) # 40ms snooze whilst it gets the next reading from the IR range sensor 
 
     return values
