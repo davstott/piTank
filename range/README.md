@@ -16,7 +16,7 @@ I2C range sensing code
 * irCalibration.txt
   My readings in volts against distance in cm from the 2D120X sensor, including maximum and minimum sensed values at each point.
 * irGraph.py
-  Small script to help me eyeball the maths to convert ADC value into range.
+  Small script to help me eyeball the maths to convert ADC value into range and produce the graphs used in the accompanying blog post explaining how I calibrated and linearised the output from the IR sensor. (http://davstott.me.uk/index.php/2013/06/01/raspberry-pi-sharp-infrared/)
 
 
 (https://raw.github.com/davstott/piTank/master/range/lcdSonarGraph.png)

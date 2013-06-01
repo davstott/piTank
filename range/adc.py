@@ -12,7 +12,7 @@ class adc:
 
   def dist2d120x(v):
     #todo: this in terms of 8bit ADC reading and fewer operators
-    return (1.0 / (v / 15.69)) - 0.42
+    return (1.0 / (v / 13.15)) - 0.35
 
   def getValues(self, numberOfValues = 1, channel = 0):
     # returns values in volts
