@@ -1,4 +1,4 @@
-import pygame, os, srf02, time
+import pygame, os, srf02, time, adc
 import matplotlib
 matplotlib.use('Agg') # set a non-interactive backend for charting
 import pylab
@@ -14,7 +14,13 @@ def main():
   imageFileName = "/tmp/lcdSonarGraph.png"  
 
   # set up the range finder
-  s = srf02.srf02()
+  # ultrasound
+  #s = srf02.srf02()
+  title = "Pi sonar"
+  # IR
+  s = adc.adc()
+  title = "Pi iRanger"
+  
 
   # set up pygame to use the framebuffer
   os.environ["SDL_FBDEV"] = "/dev/fb1"
@@ -58,7 +64,7 @@ def main():
 
     # we should probably only draw this label once and only blank the bit of the screen that changes
     # this should be yellow but my LCD's blue and red signals are swapped
-    labelText = littleFont.render("Pi Sonar", True, (0, 215, 255, 0))
+    labelText = littleFont.render(title, True, (0, 215, 255, 0))
     labelText = pygame.transform.rotate(labelText, 90)
     labelTextPosition = labelText.get_rect()
     labelTextPosition.centery = 40
